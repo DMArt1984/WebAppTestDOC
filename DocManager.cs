@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 namespace WebAppTestDOC
 {
     
-    static public class DocManager
+    static public class DocManager // Менеджер документов
     {
         
-        // переменные для теста
-        static string lastCode;
-        static string lastFileName;
-        static Document lastDocument;
-        static byte step; // этапы подписания
+        // храним в словаре, но по идее надо в базе данных
+        static Dictionary<string, Document> documents = new Dictionary<string, Document>();
 
-        static public bool Ready() => step == 2; 
+        // готов ли документ (подписан двумя сторонами)?
+        static public bool IsReady(string code) => documents.ContainsKey(code) ? documents[code].IsReady() : false; 
         
+        // 1 шаг
         static public string GetFirstData(string fileName, string phone, string IIN, string fullName)
         {
             // здесь можно записать в базу
@@ -24,74 +23,77 @@ namespace WebAppTestDOC
             // ...код...
 
             // генерируем строку, какой нужен формат строки? осмысленный или fiureiuteruf7f457435erfiure
-            string Code = $"{fileName.Length}p{phone}i{IIN}x{fullName}";
-            Code = Code.Replace("+", String.Empty);
             // используем токены?
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            long unixTimeMilliseconds = now.ToUnixTimeMilliseconds();
+            string code = $"{unixTimeMilliseconds}x{fullName}i{IIN}";
+            
+            Document document = new Document(fileName, "Договор №ххх", code);
 
-            // это только для теста
-            step = 0; // 0 = никто не подписал
-            lastCode = Code;
-            lastFileName = fileName;
+            AddDocument(code, document);
 
-            return Code;
+            return code;
         }
 
+        // 2 шаг
         static public Document GetSecondData(string code)
         {
-            if (code == lastCode)
+            if (documents.ContainsKey(code))
             {
                 // в коммерческой версии здесь будет немного сложнее, например, работа с базой...
 
-                Document document = new Document(lastFileName, "Договор №ххх", code);
-                AddDocument(document);
-                return document;
+                return documents[code];
             }
             return null; 
         }
 
-        static public void AddDocument(Document document)
+        
+        static public void AddDocument(string code, Document document)
         {
             // Можно делать разное с документом...
-            lastDocument = document;
+            documents.Add(code, document);
         }
 
         static public Document GetDocument(string code)
         {
-            if (code != lastCode) // симуляция проверки
-                return null;
-
             // Можно делать разное с документами...
-
-            return lastDocument;
+            return documents.ContainsKey(code) ? documents[code] : null;
         }
 
-        // Подписание первой стороной
+        // 3 шаг) Подписание первой стороной
         static public bool SetLeft(string code)
         {
-            if (code != lastCode) // симуляция проверки
+            if (!documents.ContainsKey(code))
                 return false;
 
             // Работа с документом
             // ...код...
             // Какую библиотеку работы с PDF используем? платную?
 
-            step = 1; // 1 = Подписание первой стороной
+            if (!documents[code].left && !documents[code].right)
+            {
+                // подписание
+                // ...код...
+                documents[code].left = true; // 1 = Подписание первой стороной
+            }
+
             return true;
         }
 
-        // Подписание второй стороной
+        // 4 шаг) Подписание второй стороной
         static public bool SetRight(string code)
         {
-            if (code != lastCode) // симуляция проверки
+            if (!documents.ContainsKey(code))
                 return false;
 
-            if (step == 1) // если одна сторона подписала, то и вторая тоже
+            if (documents[code].left) // если одна сторона подписала
             {
-                // Работа с документом
-                // ...код...
-                lastDocument.ready = true;
-
-                step = 2; // 2 = Подписание второй стороной
+                if (!documents[code].right) // а вторая еще нет
+                {
+                    // подписание
+                    // ...код...
+                    documents[code].right = true; // 2 = Подписание второй стороной
+                }
                 return true;
             } else
             {

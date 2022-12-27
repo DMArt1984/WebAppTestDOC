@@ -60,13 +60,13 @@ namespace WebAppTestDOC.Controllers
                 if (uploadedDocument == null)
                     return new JsonResult(jsonErrFile, jsonOptions);
 
-                if (String.IsNullOrWhiteSpace(phone)) // можно еще проверить является ли строка номером телефона...
+                if (!Validator.Phone(phone))
                     return new JsonResult(jsonErrPhone, jsonOptions);
 
-                if (String.IsNullOrWhiteSpace(IIN))
+                if (!Validator.IIN(IIN))
                     return new JsonResult(jsonErrIIN, jsonOptions);
 
-                if (String.IsNullOrWhiteSpace(fullName))
+                if (!Validator.FullName(fullName))
                     return new JsonResult(jsonErrName, jsonOptions);
 
                 // Сохранение файла, например так:
@@ -121,7 +121,7 @@ namespace WebAppTestDOC.Controllers
         public JsonResult StepLeft(string code)
         {
             if (DocManager.SetLeft(code))
-                return new JsonResult(new { Result = 0 }, jsonOptions);
+                return new JsonResult(new { Result = 0, Document = DocManager.GetDocument(code) }, jsonOptions);
 
             // Какие еще могут быть ошибки?
             return new JsonResult(jsonErrDoc, jsonOptions);
