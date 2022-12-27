@@ -70,7 +70,7 @@ namespace WebAppTestDOC
             // ...код...
             // Какую библиотеку работы с PDF используем? платную?
 
-            if (!documents[code].left && !documents[code].right)
+            if (!documents[code].left)
             {
                 // подписание
                 // ...код...

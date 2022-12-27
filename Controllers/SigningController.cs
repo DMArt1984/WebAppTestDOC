@@ -56,7 +56,7 @@ namespace WebAppTestDOC.Controllers
         {
             try
             {
-                // Проверка данных (без использования регулярных выражений)
+                // Проверка данных
                 if (uploadedDocument == null)
                     return new JsonResult(jsonErrFile, jsonOptions);
 
